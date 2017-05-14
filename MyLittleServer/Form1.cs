@@ -49,16 +49,19 @@ namespace MyLittleServer
                 HtmlAgilityPack.HtmlDocument doc = hw.Load(@"https://ean13.org/?query=" + message + "&page=search");
                 var nodes = doc.DocumentNode.SelectNodes("//div[@class='collist-2']");
 
-                foreach (HtmlNode node in nodes)
+                if (nodes != null)
                 {
-                    responseData = node.InnerText;
-                }
+                    foreach (HtmlNode node in nodes)
+                    {
+                        responseData = node.InnerText;
+                    }
 
-                responseData = responseData.Remove(0, 13);
-                responseData = responseData.Replace('"', ' ');
-                responseData = responseData.Replace('\'', ' ');
-                responseData = responseData.Replace('{', ' ');
-                responseData = responseData.Replace('}', ' ');
+                    responseData = responseData.Remove(0, 13);
+                    responseData = responseData.Replace('"', ' ');
+                    responseData = responseData.Replace('\'', ' ');
+                    responseData = responseData.Replace('{', ' ');
+                    responseData = responseData.Replace('}', ' ');
+                }
 
                 // Если в базе сайта нет названия - даем предмету характерное название
                 if (responseData == "")

@@ -1,0 +1,6 @@
+.vs/
+packages/
+ConvNetSharp/bin
+ConvNetSharp/obj
+MyLittleServer/bin
+MyLittleServer/obj
