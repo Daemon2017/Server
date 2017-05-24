@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using HtmlAgilityPack;
-using S22.Xmpp.Client;
-using S22.Xmpp.Im;
+using Sharp.Xmpp.Client;
 using System.IO;
-using ConvNetSharp.Serialization;
+using System.Drawing;
 
 namespace MyLittleServer
 {
@@ -14,105 +12,34 @@ namespace MyLittleServer
         int[] countArray = new int[0];
         long[] idArray = new long[0];
 
+        string fileName;
+        long fileSize;
+        bool readyToWait = false;
+
         static string hostname = "jabber.ru";
         static string username = "";
         static string password = "";
 
-        dbConnector dataBaseConn;
+        static string stringForLogTextBox;
 
-        XmppClient clientXMPP = new XmppClient(hostname, username, password);
+        static dbConnector dataBaseConn;
 
-        string workMode;
+        XmppClient clientXMPP = new XmppClient(hostname, username, password, 5222, true);
+
+        static string workMode;
 
         public Form1()
         {
             InitializeComponent();
-            
-            clientXMPP.Message += OnNewMessage;
-        }
 
-        private void Connect(string message)
-        {
-            // Проверяем нет ли вещи с таким штрихом-кодом в базе            
-            if (dataBaseConn.checkBarcodeExisting(Convert.ToInt64(message)))
-            { 
-                dataBaseConn.updateData(workMode, Convert.ToInt64(message));
-                logTextBox_textChange("Barcode есть, изменил количество");
-            }            
-            else if (!dataBaseConn.checkBarcodeExisting(Convert.ToInt64(message)))
-            {
-                logTextBox_textChange("Barcode нет, парсю имя");
-
-                string responseData = "";
-
-                HtmlWeb hw = new HtmlWeb();
-                HtmlAgilityPack.HtmlDocument doc = hw.Load(@"https://ean13.org/?query=" + message + "&page=search");
-                var nodes = doc.DocumentNode.SelectNodes("//div[@class='collist-2']");
-
-                if (nodes != null)
-                {
-                    foreach (HtmlNode node in nodes)
-                    {
-                        responseData = node.InnerText;
-                    }
-
-                    responseData = responseData.Remove(0, 13);
-                    responseData = responseData.Replace('"', ' ');
-                    responseData = responseData.Replace('\'', ' ');
-                    responseData = responseData.Replace('{', ' ');
-                    responseData = responseData.Replace('}', ' ');
-                }
-
-                // Если в базе сайта нет названия - даем предмету характерное название
-                if (responseData == "")
-                {
-                    Namer f = new Namer();
-                    f.ShowDialog();
-
-                    responseData = f.newName;
-                }
-
-                if (responseData != null)
-                {
-                    // Проверяем нет ли вещи с таким именем в базе
-                    if (workMode == "INC")
-                    {
-                        if(!dataBaseConn.checkNameExisting(responseData))
-                        {
-                            logTextBox_textChange("Имени нет, вставляю " + responseData);
-                            dataBaseConn.insertData(responseData, 1, Convert.ToInt64(message));
-                        }
-                    }
-                }
-            }
-
-            RefreshDataGrid();
-        }
-
-        private void RefreshDataGrid()
-        {
-            dataGridView1.Invoke((MethodInvoker)delegate
-            {
-                dataGridView1.DataSource = null;
-                dataGridView1.Rows.Clear();
-                dataGridView1.DataSource = dataBaseConn.GetComments("SELECT * FROM things ORDER BY `id` ASC");
-            });
-        }
-
-        private void OnNewMessage(object sender, MessageEventArgs e)
-        {
-            string data = e.Message.Body;
-            
-            string[] substrings = data.Split(',');
-
-            workMode = substrings[1];
-
-            Connect(substrings[0]);
+            clientXMPP.FileTransferRequest = OnFileTransferRequest;
+            clientXMPP.FileTransferProgress += OnFileTransferProgress;
+            clientXMPP.FileTransferSettings.ForceInBandBytestreams = true;
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (clientXMPP != null)
+            if (clientXMPP.Connected == true)
             {
                 clientXMPP.Close();
             }
@@ -120,7 +47,6 @@ namespace MyLittleServer
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            net = null;
             try
             {
                 dataBaseConn = new dbConnector();
@@ -134,32 +60,7 @@ namespace MyLittleServer
 
             try
             {
-                var json_temp = File.ReadAllLines("NetworkStructure.json");
-                string json = string.Join("", json_temp);
-                net = SerializationExtensions.FromJSON(json);
-            }
-            catch (FileNotFoundException)
-            {
-                MessageBox.Show("Не найден файл с обученной нейросетью. Необходимо обучение!",
-                                "Отсутствует файл",
-                                MessageBoxButtons.OK);
-            }
-
-            try
-            {
-                PrepareData();
-            }
-            catch (FileNotFoundException)
-            {
-                MessageBox.Show("Не найдены некоторый .cfg файлы: обучение невозможно!",
-                                "Отсутствует файл",
-                                MessageBoxButtons.OK);
-            }
-
-            try
-            {
-                clientXMPP.Tls = true;
-                clientXMPP.Connect();
+                clientXMPP.Connect("server");
             }
             catch
             {
@@ -167,8 +68,6 @@ namespace MyLittleServer
                                 "Ошибка",
                                 MessageBoxButtons.OK);
             }
-
-            RefreshDataGrid();
         }
 
         private void logTextBox_textChange(string text)
@@ -179,26 +78,38 @@ namespace MyLittleServer
             });
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void timer1_Tick(object sender, EventArgs e)
         {
-            net = null;
+            if (readyToWait == true)
+            {
+                bool success = false;
 
-            CreateNetworkForTactile();
-            TrainNetworkForTactile(0.01);
+                while (success != true)
+                {
+                    FileInfo file = new FileInfo(fileName);
 
-            MessageBox.Show("Обучение завершено!",
-                            "Готово",
-                            MessageBoxButtons.OK);
-        }
+                    if (file.Length == fileSize)
+                    {
+                        success = true;
 
-        private void button4_Click(object sender, EventArgs e)
-        {
-            TestNetworkForTactile();
-        }
+                        using (Bitmap img = (Bitmap)Image.FromFile(fileName))
+                        {
+                            DecodeBarcode(img);
+                        }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            RefreshDataGrid();
+                        readyToWait = false;
+                    }
+                }
+            }
+
+            logTextBox_textChange(stringForLogTextBox);
+
+            dataGridView1.Invoke((MethodInvoker)delegate
+            {
+                dataGridView1.DataSource = null;
+                dataGridView1.Rows.Clear();
+                dataGridView1.DataSource = dataBaseConn.GetComments("SELECT * FROM things ORDER BY `id` ASC");
+            });
         }
     }
 }

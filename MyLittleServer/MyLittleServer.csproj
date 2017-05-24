@@ -32,6 +32,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ARSoft.Tools.Net, Version=1.8.1.0, Culture=neutral, PublicKeyToken=1940454cd762ec57, processorArchitecture=MSIL">
+      <HintPath>..\packages\ARSoft.Tools.Net.1.8.1\lib\ARSoft.Tools.Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="BarcodeLib.BarcodeReader">
+      <HintPath>.\BarcodeLib.BarcodeReader.dll</HintPath>
+    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.5, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.4.9.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
       <Private>True</Private>
@@ -44,8 +51,8 @@
       <HintPath>..\packages\MySql.Web.6.9.9\lib\net45\MySql.Web.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="S22.Xmpp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\S22.Xmpp.1.0.0.0\lib\net45\S22.Xmpp.dll</HintPath>
+    <Reference Include="Sharp.Xmpp, Version=1.0.2.2, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Sharp.Xmpp.1.0.2.2\lib\net45\Sharp.Xmpp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -62,16 +69,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CNNClasses.cs" />
-    <Compile Include="CNN.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="dbConnection.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Functions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FunctionsXMPP.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Namer.cs">
       <SubType>Form</SubType>
@@ -111,10 +120,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ConvNetSharp\ConvNetSharp.csproj">
-      <Project>{d36c5763-06a5-4d08-8b18-a77ea6ce841d}</Project>
-      <Name>ConvNetSharp</Name>
-    </ProjectReference>
+    <Content Include="Client\Examples.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
