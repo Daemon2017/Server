@@ -1,6 +1,5 @@
-﻿using Sharp.Xmpp.Extensions;
-using System.Drawing;
-using System.IO;
+﻿using Sharp.Xmpp;
+using Sharp.Xmpp.Extensions;
 
 namespace MyLittleServer
 {
@@ -20,7 +19,8 @@ namespace MyLittleServer
 
         public string OnFileTransferRequest(FileTransfer transfer)
         {
-            if (transfer.From == username + "@" + hostname + "/client")
+            Jid fromJid = new Jid(hostname, username, "client");
+            if (transfer.From == fromJid)
             {
                 workMode = transfer.Description;
 
