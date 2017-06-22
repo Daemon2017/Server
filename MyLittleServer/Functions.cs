@@ -22,6 +22,10 @@ namespace MyLittleServer
 
                 ConnectToWebSite(results[0]);
             }
+            else
+            {
+                stringForLogTextBox = "Barcode не распознан";
+            }
         }
 
         private void ConnectToWebSite(string message)

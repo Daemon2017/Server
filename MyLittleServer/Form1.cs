@@ -16,21 +16,28 @@ namespace MyLittleServer
         long fileSize;
         bool readyToWait = false;
 
-        static string hostname = "jabber.ru";
-        static string username = "";
-        static string password = "";
-
         static string stringForLogTextBox;
 
         static dbConnector dataBaseConn;
 
-        XmppClient clientXMPP = new XmppClient(hostname, username, password, 5222, true);
-
         static string workMode;
+
+        static XmppClient clientXMPP;
+        string[] xmppConfig = new string[3];
+        string hostname;
+        string username;
+        string password;
 
         public Form1()
         {
             InitializeComponent();
+
+            xmppConfig = File.ReadAllLines("XMPP.cfg");
+            hostname = xmppConfig[0];
+            username = xmppConfig[1];
+            password = xmppConfig[2];
+
+            clientXMPP = new XmppClient(hostname, username, password, 5222, true);
 
             clientXMPP.FileTransferRequest = OnFileTransferRequest;
             clientXMPP.FileTransferProgress += OnFileTransferProgress;
