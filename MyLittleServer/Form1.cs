@@ -1,58 +1,56 @@
 ﻿using System;
 using System.Windows.Forms;
-using Sharp.Xmpp.Client;
+using Matrix.Xmpp.Client;
+using Matrix.Xmpp.Sasl;
 using System.IO;
-using System.Drawing;
 
 namespace MyLittleServer
 {
     public partial class Form1 : Form
     {
-        string[] namesArray = new string[0];
-        int[] countArray = new int[0];
-        long[] idArray = new long[0];
-
-        string fileName;
-        long fileSize;
-        bool readyToWait = false;
-
-        static string stringForLogTextBox;
-
         static dbConnector dataBaseConn;
 
         static string workMode;
 
-        static XmppClient clientXMPP;
-        string[] xmppConfig = new string[3];
-        string hostname;
-        string username;
-        string password;
+        XmppClient xmppClient = new XmppClient();
+        FileTransferManager ftm = new FileTransferManager();
 
         public Form1()
         {
             InitializeComponent();
 
+            string lic = @"";
+            Matrix.License.LicenseManager.SetLicense(lic);
+
+            string[] xmppConfig = new string[3];
             xmppConfig = File.ReadAllLines("XMPP.cfg");
-            hostname = xmppConfig[0];
-            username = xmppConfig[1];
-            password = xmppConfig[2];
+            xmppClient.SetXmppDomain(xmppConfig[0]);
+            xmppClient.SetUsername(xmppConfig[1]);
+            xmppClient.Password = xmppConfig[2];
+            xmppClient.Resource = "server";
+            xmppClient.Port = 5222;
+            xmppClient.StartTls = true;
+            xmppClient.OnLogin += new EventHandler<Matrix.EventArgs>(xmppClient_OnLogin);
+            xmppClient.OnAuthError += new EventHandler<SaslEventArgs>(xmppClient_OnAuthError);
+            xmppClient.OnClose += new EventHandler<Matrix.EventArgs>(xmppClient_OnClose);
 
-            clientXMPP = new XmppClient(hostname, username, password, 5222, true);
-
-            clientXMPP.FileTransferRequest = OnFileTransferRequest;
-            clientXMPP.FileTransferProgress += OnFileTransferProgress;
-            clientXMPP.FileTransferSettings.ForceInBandBytestreams = true;
+            ftm.XmppClient = xmppClient;
+            ftm.Blocking = true;
+            ftm.OnDeny += fm_OnDeny;
+            ftm.OnAbort += fm_OnAbort;
+            ftm.OnError += fm_OnError;
+            ftm.OnEnd += fm_OnEnd;
+            ftm.OnStart += fm_OnStart;
+            ftm.OnProgress += fm_OnProgress;
+            ftm.OnFile += fm_OnFile;          
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (clientXMPP.Connected == true)
-            {
-                clientXMPP.Close();
-            }
+            xmppClient.Close();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, System.EventArgs e)
         {
             try
             {
@@ -65,52 +63,19 @@ namespace MyLittleServer
                                MessageBoxButtons.OK);
             }
 
-            try
-            {
-                clientXMPP.Connect("server");
-            }
-            catch
-            {
-                MessageBox.Show("Не удалось соединиться с сервером, проверьте логин/пароль!",
-                                "Ошибка",
-                                MessageBoxButtons.OK);
-            }
+            xmppClient.Open();
         }
 
         private void logTextBox_textChange(string text)
         {
             log_textBox.Invoke((MethodInvoker)delegate
             {
-                log_textBox.Text = text;
+                log_textBox.Text += text + "\r\n";
             });
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void timer1_Tick(object sender, System.EventArgs e)
         {
-            if (readyToWait == true)
-            {
-                bool success = false;
-
-                while (success != true)
-                {
-                    FileInfo file = new FileInfo(fileName);
-
-                    if (file.Length == fileSize)
-                    {
-                        success = true;
-
-                        using (Bitmap img = (Bitmap)Image.FromFile(fileName))
-                        {
-                            DecodeBarcode(img);
-                        }
-
-                        readyToWait = false;
-                    }
-                }
-            }
-
-            logTextBox_textChange(stringForLogTextBox);
-
             dataGridView1.Invoke((MethodInvoker)delegate
             {
                 dataGridView1.DataSource = null;

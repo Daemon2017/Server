@@ -1,34 +1,78 @@
-﻿using Sharp.Xmpp;
-using Sharp.Xmpp.Extensions;
+﻿using Matrix;
+using Matrix.Xmpp.Client;
+using Matrix.Xmpp.Sasl;
+using System;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
 
 namespace MyLittleServer
 {
     public partial class Form1
     {
-        public void OnFileTransferProgress(object sender, FileTransferProgressEventArgs e)
+        private void xmppClient_OnLogin(object sender, Matrix.EventArgs e)
         {
-            stringForLogTextBox = "Receiving " + e.Transfer.Name + "..." + e.Transfer.Transferred + "/" + e.Transfer.Size + " Bytes";
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Соединение с сервером XMPP установлено!");
+        }
 
-            if (e.Transfer.Transferred == e.Transfer.Size)
+        private void xmppClient_OnAuthError(object sender, SaslEventArgs e)
+        {
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Соединение с сервером XMPP не удалось!");
+        }
+
+        private void xmppClient_OnClose(object sender, Matrix.EventArgs e)
+        {
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Соединение с сервером XMPP разорвано!");
+        }
+
+        private void fm_OnFile(object sender, FileTransferEventArgs e)
+        {
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Получен запрос на получение файла!");
+
+            Jid fromJid = new Jid(xmppClient.Username,
+                                  xmppClient.XmppDomain,
+                                  "client");
+
+            if (e.Jid.ToString().ToLower() == fromJid.ToString().ToLower())
             {
-                fileName = e.Transfer.Name;
-                fileSize = e.Transfer.Size;
-                readyToWait = true;
+                workMode = e.Description;
+                e.Directory = Path.GetDirectoryName(Application.ExecutablePath);
+                e.Accept = true;
             }
         }
 
-        public string OnFileTransferRequest(FileTransfer transfer)
+        private void fm_OnDeny(object sender, FileTransferEventArgs e)
         {
-            Jid fromJid = new Jid(hostname, username, "client");
-            if (transfer.From == fromJid)
-            {
-                workMode = transfer.Description;
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Прием файла отклонен!");
+        }
 
-                return transfer.Name;
-            }
-            else
+        private void fm_OnStart(object sender, FileTransferEventArgs e)
+        {
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Прием файла начат!");
+        }
+
+        private void fm_OnProgress(object sender, FileTransferEventArgs e)
+        {
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Ход приема файла: " + e.BytesTransmitted + "/" + e.FileSize + " байт");
+        }
+
+        private void fm_OnAbort(object sender, FileTransferEventArgs e)
+        {
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Прием файла прерван!");
+        }
+
+        private void fm_OnError(object sender, ExceptionEventArgs e)
+        {
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Ошибка приема файла!");
+        }
+
+        private void fm_OnEnd(object sender, FileTransferEventArgs e)
+        {
+            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Прием файла завершен!");
+
+            using (Bitmap img = (Bitmap)Image.FromFile(e.Filename))
             {
-                return null;
+                DecodeBarcode(img);
             }
         }
     }

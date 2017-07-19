@@ -24,7 +24,7 @@ namespace MyLittleServer
             }
             else
             {
-                stringForLogTextBox = "Barcode не распознан";
+                logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Barcode не распознан");
             }
         }
 
@@ -34,11 +34,11 @@ namespace MyLittleServer
             if (dataBaseConn.checkBarcodeExisting(Convert.ToInt64(message)))
             {
                 dataBaseConn.updateData(workMode, Convert.ToInt64(message));
-                stringForLogTextBox = "Barcode есть, изменил количество";
+                logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Barcode есть, изменил количество");
             }
             else if (!dataBaseConn.checkBarcodeExisting(Convert.ToInt64(message)))
             {
-                stringForLogTextBox = "Barcode нет, парсю имя";
+                logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Barcode нет, парсю имя");
 
                 string responseData = "";
 
@@ -76,7 +76,7 @@ namespace MyLittleServer
                     {
                         if (!dataBaseConn.checkNameExisting(responseData))
                         {
-                            stringForLogTextBox = "Имени нет, вставляю " + responseData;
+                            logTextBox_textChange(DateTime.Now.ToString("HH:mm:ss") + " Имени нет, вставляю " + responseData);
                             dataBaseConn.insertData(responseData, 1, Convert.ToInt64(message));
                         }
                     }

@@ -41,17 +41,18 @@
             this.dataGridView1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.dataGridView1.Location = new System.Drawing.Point(12, 12);
             this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(500, 334);
+            this.dataGridView1.Size = new System.Drawing.Size(450, 240);
             this.dataGridView1.TabIndex = 13;
             // 
             // log_textBox
             // 
             this.log_textBox.Enabled = false;
-            this.log_textBox.Location = new System.Drawing.Point(12, 352);
+            this.log_textBox.Location = new System.Drawing.Point(467, 12);
             this.log_textBox.Margin = new System.Windows.Forms.Padding(2);
+            this.log_textBox.Multiline = true;
             this.log_textBox.Name = "log_textBox";
             this.log_textBox.ReadOnly = true;
-            this.log_textBox.Size = new System.Drawing.Size(501, 20);
+            this.log_textBox.Size = new System.Drawing.Size(450, 240);
             this.log_textBox.TabIndex = 19;
             // 
             // timer1
@@ -63,7 +64,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(635, 403);
+            this.ClientSize = new System.Drawing.Size(924, 265);
             this.Controls.Add(this.log_textBox);
             this.Controls.Add(this.dataGridView1);
             this.Name = "Form1";

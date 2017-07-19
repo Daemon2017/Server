@@ -26,18 +26,7 @@ namespace MyLittleServer
                                             QUANTITY
                                             FROM   things
                                             WHERE  QUANTITY > 0";
-
-        public dbConnector()
-        {
-            dataBase = new DataTable();
-            mysqlCSB = new MySqlConnectionStringBuilder();
-            mysqlCSB.Server = "";
-            mysqlCSB.Port = 3306;
-            mysqlCSB.Database = "";
-            mysqlCSB.UserID = "";
-            mysqlCSB.Password = "";
-        }
-        
+       
         public bool checkBarcodeExisting(long barcode)
         {
             string strNameExisting = @"SELECT id, NAME, QUANTITY FROM things WHERE BARCODE= " + '"' + barcode + '"';
